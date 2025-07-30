@@ -1,26 +1,26 @@
 pipeline {
     agent {
         kubernetes {
-        yaml '''
-            apiVersion: v1
-            kind: Pod
-            spec:
-              containers:
-              - name: go
-                image: golang:1.21
-                securityContext:
-                  runAsUser: 0
-                command: ["sleep"]
-                args: ["infinity"]
-              - name: docker
-                image: docker:20.10-dind
-                securityContext:
-                  privileged: true
-                env:
-                  - name: DOCKER_TLS_CERTDIR
-                    value: ""
-        '''
-    }
+            yaml '''
+                apiVersion: v1
+                kind: Pod
+                spec:
+                containers:
+                - name: go
+                    image: golang:1.21
+                    securityContext:
+                    runAsUser: 0
+                    command: ["sleep"]
+                    args: ["infinity"]
+                - name: docker
+                    image: docker:20.10-dind
+                    securityContext:
+                    privileged: true
+                    env:
+                    - name: DOCKER_TLS_CERTDIR
+                        value: ""
+            '''
+        }
     }
     
     environment {
