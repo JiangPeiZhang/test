@@ -90,7 +90,12 @@ curl -X POST http://localhost:8080/health
 - curl（用于测试接口，流水线会自动检查并安装）
 - timeout（用于进程控制，流水线会自动检查）
 
-**注意：** Jenkinsfile已配置为使用root权限的Docker容器，无需额外权限配置。
+**注意：** Jenkinsfile已配置为使用Kubernetes agent，具有以下优势：
+- 使用预装的Go 1.21镜像，无需安装Go
+- 以root权限运行，可以安装额外工具
+- 在K8s Pod中运行，环境隔离
+- 自动安装curl等必要工具
+- 内置Docker-in-Docker，支持Docker镜像构建
 
 ### 分支策略
 
