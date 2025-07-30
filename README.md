@@ -81,7 +81,8 @@ curl -X POST http://localhost:8080/health
 5. **Build** - 构建可执行文件
 6. **Test Build Result** - 测试构建结果（启动服务并测试Health接口，自动检查并安装curl）
 7. **Create Dockerfile** - 创建Dockerfile
-8. **Docker Build** - 构建Docker镜像
+8. **Docker Build** - 构建Docker镜像（自动检查并安装Docker）
+9. **Archive Artifacts** - 归档制品到KubeSphere制品库
 
 ### 环境要求
 
@@ -95,8 +96,17 @@ curl -X POST http://localhost:8080/health
 - 以root权限运行，可以安装额外工具
 - 在K8s Pod中运行，环境隔离
 - 自动安装curl等必要工具
-- 内置Docker-in-Docker，支持Docker镜像构建
+- 自动检查并安装Docker，支持Docker镜像构建
 
 ### 分支策略
 
-- 所有分支都会执行完整的流水线，包括构建、测试和Docker镜像构建
+- 所有分支都会执行完整的流水线，包括构建、测试、Docker镜像构建和制品归档
+
+### 制品管理
+
+流水线会自动归档以下制品到KubeSphere制品库：
+- **Docker镜像**: `pzjiang-test-${BUILD_NUMBER}.tar` 和 `pzjiang-test-latest.tar`
+- **可执行文件**: `pzjiang-test`
+- **源代码**: `*.go` 和 `*.mod` 文件
+
+这些制品可以在KubeSphere的制品库中查看和下载。

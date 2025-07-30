@@ -5,20 +5,21 @@ pipeline {
                 apiVersion: v1
                 kind: Pod
                 spec:
-                containers:
-                - name: go
+                  containers:
+                  - name: go
                     image: golang:1.21
+                    command:
+                    - cat
+                    tty: true
                     securityContext:
-                    runAsUser: 0
-                    command: ["sleep"]
-                    args: ["infinity"]
-                - name: docker
-                    image: docker:20.10-dind
-                    securityContext:
-                    privileged: true
-                    env:
-                    - name: DOCKER_TLS_CERTDIR
-                        value: ""
+                      runAsUser: 0
+                      runAsGroup: 0
+                    volumeMounts:
+                    - name: workspace
+                      mountPath: /home/jenkins/agent
+                  volumes:
+                  - name: workspace
+                    emptyDir: {}
             '''
         }
     }
@@ -51,11 +52,6 @@ pipeline {
                         echo "安装curl..."
                         apt-get update && apt-get install -y curl
                     fi
-                    
-                    # 等待Docker启动
-                    echo "等待Docker启动..."
-                    sleep 10
-                    docker --version || echo "Docker可能还在启动中"
                 '''
             }
         }
@@ -131,35 +127,65 @@ pipeline {
             steps {
                 echo '构建Docker镜像...'
                 sh '''
-                    echo "开始构建Docker镜像..."
-                    docker build -t pzjiang-test:${BUILD_NUMBER} .
-                    docker tag pzjiang-test:${BUILD_NUMBER} pzjiang-test:latest
-                    echo "Docker镜像构建完成: pzjiang-test:${BUILD_NUMBER}"
+                    # 检查Docker是否可用
+                    if command -v docker &> /dev/null; then
+                        echo "Docker可用，开始构建镜像..."
+                        docker build -t pzjiang-test:${BUILD_NUMBER} .
+                        docker tag pzjiang-test:${BUILD_NUMBER} pzjiang-test:latest
+                        echo "Docker镜像构建完成: pzjiang-test:${BUILD_NUMBER}"
+                        
+                        # 显示镜像信息
+                        docker images | grep pzjiang-test
+                        
+                        # 保存镜像为tar文件
+                        docker save pzjiang-test:${BUILD_NUMBER} > pzjiang-test-${BUILD_NUMBER}.tar
+                        docker save pzjiang-test:latest > pzjiang-test-latest.tar
+                        echo "镜像已保存为tar文件"
+                    else
+                        echo "Docker不可用，尝试安装Docker..."
+                        
+                        # 尝试安装Docker
+                        if command -v apt-get &> /dev/null; then
+                            apt-get update
+                            apt-get install -y docker.io
+                            systemctl start docker || service docker start || true
+                            
+                            # 再次尝试构建
+                            if command -v docker &> /dev/null; then
+                                echo "Docker安装成功，开始构建镜像..."
+                                docker build -t pzjiang-test:${BUILD_NUMBER} .
+                                docker tag pzjiang-test:${BUILD_NUMBER} pzjiang-test:latest
+                                echo "Docker镜像构建完成: pzjiang-test:${BUILD_NUMBER}"
+                                
+                                # 保存镜像为tar文件
+                                docker save pzjiang-test:${BUILD_NUMBER} > pzjiang-test-${BUILD_NUMBER}.tar
+                                docker save pzjiang-test:latest > pzjiang-test-latest.tar
+                                echo "镜像已保存为tar文件"
+                            else
+                                echo "Docker安装失败，跳过镜像构建"
+                            fi
+                        else
+                            echo "无法安装Docker，跳过镜像构建"
+                        fi
+                    fi
                 '''
             }
         }
-    }
-    
-    post {
-        always {
-            echo '清理工作空间...'
-            sh 'rm -f ${PROJECT_NAME}'
-        }
         
-        success {
-            echo '构建成功！'
-        }
-        
-        failure {
-            echo '构建失败！'
-        }
-        
-        cleanup {
-            echo '清理环境...'
-            sh '''
-                pkill -f ${PROJECT_NAME} || true
-                rm -f Dockerfile || true
-            '''
+        stage('Archive Artifacts') {
+            steps {
+                echo '归档制品...'
+                sh '''
+                    # 列出所有制品文件
+                    ls -la *.tar *.go *.mod || true
+                    ls -la ${PROJECT_NAME} || true
+                '''
+                
+                // 归档制品到KubeSphere制品库
+                archiveArtifacts artifacts: '*.tar,*.go,*.mod,${PROJECT_NAME}', fingerprint: true
+                
+                echo '制品归档完成'
+            }
         }
     }
 } 
