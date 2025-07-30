@@ -10,8 +10,8 @@ pipeline {
                     runAsGroup: 0
                     fsGroup: 0
                   containers:
-                  - name: go
-                    image: golang:1.21
+                  - name: agent
+                    image: ubuntu:20.04
                     command:
                     - cat
                     tty: true
@@ -45,6 +45,21 @@ pipeline {
             steps {
                 echo '设置环境...'
                 sh '''
+                    # 检查并安装Go
+                    if ! command -v go &> /dev/null; then
+                        echo "Go未安装，开始安装Go..."
+                        apt-get update
+                        apt-get install -y wget
+                        wget https://go.dev/dl/go1.21.0.linux-amd64.tar.gz
+                        tar -C /usr/local -xzf go1.21.0.linux-amd64.tar.gz
+                        export PATH=$PATH:/usr/local/go/bin
+                        echo 'export PATH=$PATH:/usr/local/go/bin' >> ~/.bashrc
+                        rm -f go1.21.0.linux-amd64.tar.gz
+                        echo "Go安装完成"
+                    else
+                        echo "Go已安装"
+                    fi
+                    
                     # 显示Go版本
                     go version
                     

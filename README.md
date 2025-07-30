@@ -92,7 +92,8 @@ curl -X POST http://localhost:8080/health
 - timeout（用于进程控制，流水线会自动检查）
 
 **注意：** Jenkinsfile已配置为使用Kubernetes agent，具有以下优势：
-- 使用预装的Go 1.21镜像，无需安装Go
+- 使用Ubuntu 20.04基础镜像，提供稳定的Linux环境
+- 自动检查并安装Go 1.21，确保Go环境可用
 - 以root权限运行，可以安装额外工具
 - 在K8s Pod中运行，环境隔离
 - 自动安装curl等必要工具
