@@ -75,13 +75,13 @@ curl -X POST http://localhost:8080/health
 ### 流水线阶段
 
 1. **Checkout** - 检出代码
-2. **Setup Go Environment** - 设置Go环境
+2. **Setup Environment** - 设置Go环境
 3. **Install Dependencies** - 安装项目依赖
-4. **Code Quality Check** - 代码质量检查（格式化、静态分析、测试）
+4. **Code Quality Check** - 代码质量检查（格式化、静态分析）
 5. **Build** - 构建可执行文件
 6. **Test Build Result** - 测试构建结果（启动服务并测试Health接口）
-7. **Docker Build** - 构建Docker镜像（仅在main/master分支）
-8. **Push to Registry** - 推送镜像到仓库（仅在main/master分支）
+7. **Create Dockerfile** - 创建Dockerfile（仅在main/master分支）
+8. **Docker Build** - 构建Docker镜像（仅在main/master分支）
 
 ### 环境要求
 
