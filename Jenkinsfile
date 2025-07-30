@@ -61,9 +61,9 @@ pipeline {
                     # 显示Go版本
                     go version
                     
-                    # 设置Go环境变量
-                    export GOPATH=$WORKSPACE
-                    export PATH=$PATH:$GOPATH/bin
+                    # 设置Go环境变量 - 不使用GOPATH
+                    export GO111MODULE=on
+                    export GOCACHE=/tmp/go-cache
                     
                     # 安装curl（如果需要）
                     if ! command -v curl &> /dev/null; then
@@ -86,6 +86,11 @@ pipeline {
                     docker --version || echo "Docker可能有问题"
                     
                     echo "=== Step 3: 安装项目依赖 ==="
+                    # 确保在正确的目录中
+                    pwd
+                    ls -la
+                    
+                    # 清理并重新初始化Go模块
                     go mod download
                     go mod tidy
                     
