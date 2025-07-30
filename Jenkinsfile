@@ -128,9 +128,6 @@ pipeline {
         }
         
         stage('Docker Build') {
-            when {
-                expression { env.BUILD_BRANCH == 'main' || env.BUILD_BRANCH == 'master' }
-            }
             steps {
                 echo '构建Docker镜像...'
                 sh '''
@@ -146,9 +143,7 @@ pipeline {
     post {
         always {
             echo '清理工作空间...'
-            node {
-                sh 'rm -f ${PROJECT_NAME}'
-            }
+            sh 'rm -f ${PROJECT_NAME}'
         }
         
         success {
@@ -161,12 +156,10 @@ pipeline {
         
         cleanup {
             echo '清理环境...'
-            node {
-                sh '''
-                    pkill -f ${PROJECT_NAME} || true
-                    rm -f Dockerfile || true
-                '''
-            }
+            sh '''
+                pkill -f ${PROJECT_NAME} || true
+                rm -f Dockerfile || true
+            '''
         }
     }
 } 

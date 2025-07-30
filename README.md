@@ -80,8 +80,8 @@ curl -X POST http://localhost:8080/health
 4. **Code Quality Check** - 代码质量检查（格式化、静态分析）
 5. **Build** - 构建可执行文件
 6. **Test Build Result** - 测试构建结果（启动服务并测试Health接口，自动检查并安装curl）
-7. **Create Dockerfile** - 创建Dockerfile并检查Docker环境（仅在main/master分支）
-8. **Docker Build** - 构建Docker镜像（仅在main/master分支，Docker可用时）
+7. **Create Dockerfile** - 创建Dockerfile
+8. **Docker Build** - 构建Docker镜像
 
 ### 环境要求
 
@@ -99,5 +99,4 @@ curl -X POST http://localhost:8080/health
 
 ### 分支策略
 
-- 所有分支都会执行构建和测试
-- 只有main/master分支会构建和推送Docker镜像
+- 所有分支都会执行完整的流水线，包括构建、测试和Docker镜像构建
