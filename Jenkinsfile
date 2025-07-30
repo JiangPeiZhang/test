@@ -38,13 +38,11 @@ pipeline {
             steps {
                 echo '开始构建和测试流程...'
                 
-                // Step 1: 检出代码
-                echo 'Step 1: 检出代码...'
-                checkout scm
-                
-                // Step 2: 设置环境
-                echo 'Step 2: 设置环境...'
                 sh '''
+                    echo "=== Step 1: 检出代码 ==="
+                    # 检出代码（checkout scm 在Jenkins中会自动执行）
+                    
+                    echo "=== Step 2: 设置环境 ==="
                     # 检查并安装Go
                     if ! command -v go &> /dev/null; then
                         echo "Go未安装，开始安装Go..."
@@ -86,32 +84,20 @@ pipeline {
                     
                     # 显示Docker版本
                     docker --version || echo "Docker可能有问题"
-                '''
-                
-                // Step 3: 安装项目依赖
-                echo 'Step 3: 安装项目依赖...'
-                sh '''
+                    
+                    echo "=== Step 3: 安装项目依赖 ==="
                     go mod download
                     go mod tidy
-                '''
-                
-                // Step 4: 代码质量检查
-                echo 'Step 4: 代码质量检查...'
-                sh '''
+                    
+                    echo "=== Step 4: 代码质量检查 ==="
                     go fmt ./...
                     go vet ./...
-                '''
-                
-                // Step 5: 构建项目
-                echo 'Step 5: 构建项目...'
-                sh '''
+                    
+                    echo "=== Step 5: 构建项目 ==="
                     go build -o ${PROJECT_NAME} main.go
                     ls -la ${PROJECT_NAME}
-                '''
-                
-                // Step 6: 测试构建结果
-                echo 'Step 6: 测试构建结果...'
-                sh '''
+                    
+                    echo "=== Step 6: 测试构建结果 ==="
                     # 启动服务进行测试
                     timeout 30s ./${PROJECT_NAME} &
                     sleep 5
@@ -121,11 +107,8 @@ pipeline {
                     
                     # 停止服务
                     pkill -f ${PROJECT_NAME} || true
-                '''
-                
-                // Step 7: 创建Dockerfile
-                echo 'Step 7: 创建Dockerfile...'
-                sh '''
+                    
+                    echo "=== Step 7: 创建Dockerfile ==="
                     echo "FROM golang:1.21-alpine AS builder" > Dockerfile
                     echo "WORKDIR /app" >> Dockerfile
                     echo "COPY go.mod go.sum ./" >> Dockerfile
@@ -138,11 +121,8 @@ pipeline {
                     echo "COPY --from=builder /app/pzjiang-test ." >> Dockerfile
                     echo "EXPOSE 8080" >> Dockerfile
                     echo 'CMD ["./pzjiang-test"]' >> Dockerfile
-                '''
-                
-                // Step 8: 构建Docker镜像
-                echo 'Step 8: 构建Docker镜像...'
-                sh '''
+                    
+                    echo "=== Step 8: 构建Docker镜像 ==="
                     echo "开始构建Docker镜像..."
                     docker build -t pzjiang-test:${BUILD_NUMBER} .
                     docker tag pzjiang-test:${BUILD_NUMBER} pzjiang-test:latest
@@ -155,21 +135,20 @@ pipeline {
                     docker save pzjiang-test:${BUILD_NUMBER} > pzjiang-test-${BUILD_NUMBER}.tar
                     docker save pzjiang-test:latest > pzjiang-test-latest.tar
                     echo "镜像已保存为tar文件"
-                '''
-                
-                // Step 9: 归档制品
-                echo 'Step 9: 归档制品...'
-                sh '''
+                    
+                    echo "=== Step 9: 归档制品 ==="
                     # 列出所有制品文件
                     ls -la *.tar *.go *.mod || true
                     ls -la ${PROJECT_NAME} || true
+                    
+                    echo "构建和测试流程完成！"
                 '''
                 
                 // 归档制品到KubeSphere制品库
                 archiveArtifacts artifacts: '*.tar,*.go,*.mod,${PROJECT_NAME}', fingerprint: true
                 
-                echo '构建和测试流程完成！'
+                echo '制品归档完成！'
             }
         }
     }
-} 
+}
