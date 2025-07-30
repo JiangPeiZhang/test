@@ -34,16 +34,16 @@ pipeline {
     }
     
     stages {
-        stage('Checkout') {
+        stage('Build and Test') {
             steps {
-                echo '开始检出代码...'
+                echo '开始构建和测试流程...'
+                
+                // Step 1: 检出代码
+                echo 'Step 1: 检出代码...'
                 checkout scm
-            }
-        }
-        
-        stage('Setup Environment') {
-            steps {
-                echo '设置环境...'
+                
+                // Step 2: 设置环境
+                echo 'Step 2: 设置环境...'
                 sh '''
                     # 检查并安装Go
                     if ! command -v go &> /dev/null; then
@@ -87,42 +87,30 @@ pipeline {
                     # 显示Docker版本
                     docker --version || echo "Docker可能有问题"
                 '''
-            }
-        }
-        
-        stage('Install Dependencies') {
-            steps {
-                echo '安装项目依赖...'
+                
+                // Step 3: 安装项目依赖
+                echo 'Step 3: 安装项目依赖...'
                 sh '''
                     go mod download
                     go mod tidy
                 '''
-            }
-        }
-        
-        stage('Code Quality Check') {
-            steps {
-                echo '代码质量检查...'
+                
+                // Step 4: 代码质量检查
+                echo 'Step 4: 代码质量检查...'
                 sh '''
                     go fmt ./...
                     go vet ./...
                 '''
-            }
-        }
-        
-        stage('Build') {
-            steps {
-                echo '构建项目...'
+                
+                // Step 5: 构建项目
+                echo 'Step 5: 构建项目...'
                 sh '''
                     go build -o ${PROJECT_NAME} main.go
                     ls -la ${PROJECT_NAME}
                 '''
-            }
-        }
-        
-        stage('Test Build Result') {
-            steps {
-                echo '测试构建结果...'
+                
+                // Step 6: 测试构建结果
+                echo 'Step 6: 测试构建结果...'
                 sh '''
                     # 启动服务进行测试
                     timeout 30s ./${PROJECT_NAME} &
@@ -134,12 +122,9 @@ pipeline {
                     # 停止服务
                     pkill -f ${PROJECT_NAME} || true
                 '''
-            }
-        }
-        
-        stage('Create Dockerfile') {
-            steps {
-                echo '创建Dockerfile...'
+                
+                // Step 7: 创建Dockerfile
+                echo 'Step 7: 创建Dockerfile...'
                 sh '''
                     echo "FROM golang:1.21-alpine AS builder" > Dockerfile
                     echo "WORKDIR /app" >> Dockerfile
@@ -154,12 +139,9 @@ pipeline {
                     echo "EXPOSE 8080" >> Dockerfile
                     echo 'CMD ["./pzjiang-test"]' >> Dockerfile
                 '''
-            }
-        }
-        
-        stage('Docker Build') {
-            steps {
-                echo '构建Docker镜像...'
+                
+                // Step 8: 构建Docker镜像
+                echo 'Step 8: 构建Docker镜像...'
                 sh '''
                     echo "开始构建Docker镜像..."
                     docker build -t pzjiang-test:${BUILD_NUMBER} .
@@ -174,12 +156,9 @@ pipeline {
                     docker save pzjiang-test:latest > pzjiang-test-latest.tar
                     echo "镜像已保存为tar文件"
                 '''
-            }
-        }
-        
-        stage('Archive Artifacts') {
-            steps {
-                echo '归档制品...'
+                
+                // Step 9: 归档制品
+                echo 'Step 9: 归档制品...'
                 sh '''
                     # 列出所有制品文件
                     ls -la *.tar *.go *.mod || true
@@ -189,7 +168,7 @@ pipeline {
                 // 归档制品到KubeSphere制品库
                 archiveArtifacts artifacts: '*.tar,*.go,*.mod,${PROJECT_NAME}', fingerprint: true
                 
-                echo '制品归档完成'
+                echo '构建和测试流程完成！'
             }
         }
     }
