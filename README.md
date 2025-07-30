@@ -14,6 +14,7 @@
 pzjiang-test/
 ├── main.go          # 主程序文件
 ├── go.mod           # Go模块文件
+├── Jenkinsfile      # Jenkins CI/CD流水线配置
 └── README.md        # 项目说明
 ```
 
@@ -66,3 +67,29 @@ curl -X POST http://localhost:8080/health
 
 - 服务端口：8080
 - 服务地址：http://localhost:8080
+
+## CI/CD 流水线
+
+项目包含Jenkinsfile，支持在KubeSphere中进行自动化构建和部署。
+
+### 流水线阶段
+
+1. **Checkout** - 检出代码
+2. **Setup Go Environment** - 设置Go环境
+3. **Install Dependencies** - 安装项目依赖
+4. **Code Quality Check** - 代码质量检查（格式化、静态分析、测试）
+5. **Build** - 构建可执行文件
+6. **Test Build Result** - 测试构建结果（启动服务并测试Health接口）
+7. **Docker Build** - 构建Docker镜像（仅在main/master分支）
+8. **Push to Registry** - 推送镜像到仓库（仅在main/master分支）
+
+### 环境要求
+
+- Jenkins环境需要安装Go 1.21+
+- Docker（用于构建镜像）
+- curl（用于测试接口）
+
+### 分支策略
+
+- 所有分支都会执行构建和测试
+- 只有main/master分支会构建和推送Docker镜像
