@@ -1,40 +1,26 @@
 pipeline {
     agent {
         kubernetes {
-            yaml '''
-                apiVersion: v1
-                kind: Pod
-                spec:
-                  containers:
-                  - name: go
-                    image: golang:1.21
-                    command:
-                    - cat
-                    tty: true
-                    securityContext:
-                      runAsUser: 0
-                      runAsGroup: 0
-                    volumeMounts:
-                    - name: workspace
-                      mountPath: /home/jenkins/agent
-                    - name: docker-sock
-                      mountPath: /var/run/docker.sock
-                  - name: docker
-                    image: docker:20.10-dind
-                    command:
-                    - dockerd
-                    securityContext:
-                      privileged: true
-                    volumeMounts:
-                    - name: docker-sock
-                      mountPath: /var/run/docker.sock
-                  volumes:
-                  - name: workspace
-                    emptyDir: {}
-                  - name: docker-sock
-                    emptyDir: {}
-            '''
-        }
+        yaml '''
+            apiVersion: v1
+            kind: Pod
+            spec:
+              containers:
+              - name: go
+                image: golang:1.21
+                securityContext:
+                  runAsUser: 0
+                command: ["sleep"]
+                args: ["infinity"]
+              - name: docker
+                image: docker:20.10-dind
+                securityContext:
+                  privileged: true
+                env:
+                  - name: DOCKER_TLS_CERTDIR
+                    value: ""
+        '''
+    }
     }
     
     environment {
@@ -122,9 +108,6 @@ pipeline {
         }
         
         stage('Create Dockerfile') {
-            when {
-                expression { env.BUILD_BRANCH == 'main' || env.BUILD_BRANCH == 'master' }
-            }
             steps {
                 echo '创建Dockerfile...'
                 sh '''
