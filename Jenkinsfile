@@ -22,21 +22,8 @@ pipeline {
                     volumeMounts:
                     - name: workspace
                       mountPath: /home/jenkins/agent
-                    - name: docker-sock
-                      mountPath: /var/run/docker.sock
-                  - name: docker
-                    image: docker:20.10-dind
-                    command:
-                    - dockerd
-                    securityContext:
-                      privileged: true
-                    volumeMounts:
-                    - name: docker-sock
-                      mountPath: /var/run/docker.sock
                   volumes:
                   - name: workspace
-                    emptyDir: {}
-                  - name: docker-sock
                     emptyDir: {}
             '''
         }
@@ -71,10 +58,19 @@ pipeline {
                         apt-get update && apt-get install -y curl
                     fi
                     
-                    # 等待Docker启动
-                    echo "等待Docker启动..."
-                    sleep 10
-                    docker --version || echo "Docker可能还在启动中"
+                    # 检查并安装Docker
+                    if ! command -v docker &> /dev/null; then
+                        echo "Docker未安装，开始安装Docker..."
+                        apt-get update
+                        apt-get install -y docker.io
+                        systemctl start docker || service docker start || true
+                        echo "Docker安装完成"
+                    else
+                        echo "Docker已安装"
+                    fi
+                    
+                    # 显示Docker版本
+                    docker --version || echo "Docker可能有问题"
                 '''
             }
         }
