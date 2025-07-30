@@ -90,6 +90,8 @@ curl -X POST http://localhost:8080/health
 - curl（用于测试接口，流水线会自动检查并安装）
 - timeout（用于进程控制，流水线会自动检查）
 
+**注意：** Jenkinsfile已配置为使用root权限的Docker容器，无需额外权限配置。
+
 ### 分支策略
 
 - 所有分支都会执行构建和测试
